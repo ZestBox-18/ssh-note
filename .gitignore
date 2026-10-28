@@ -1,0 +1,7 @@
+.build/
+.swiftpm/
+.ai-local/
+dist/
+.DS_Store
+*.p12
+*.mobileprovision
