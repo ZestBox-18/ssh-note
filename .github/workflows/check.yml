@@ -4,8 +4,29 @@ permissions:
   contents: read
 jobs:
   test:
-    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-26]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: 记录构建工具
+        run: |
+          xcodebuild -version
+          swift --version
+          xcrun --show-sdk-version
+      - name: 确认新版系统使用新版 SDK
+        if: matrix.os == 'macos-26'
+        run: |
+          sdk_version=$(xcrun --show-sdk-version)
+          test "${sdk_version%%.*}" -ge 26
       - run: swift run CoreChecks
       - run: ./scripts/build-app.sh
+      - run: codesign --verify --strict dist/SSHNote.app
+      - name: 打包开发预览
+        run: ditto -c -k --sequesterRsrc --keepParent dist/SSHNote.app dist/SSHNote-${{ matrix.os }}.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SSHNote-${{ matrix.os }}
+          path: dist/SSHNote-${{ matrix.os }}.zip

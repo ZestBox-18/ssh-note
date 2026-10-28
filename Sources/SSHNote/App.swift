@@ -53,7 +53,7 @@ init() {
     func refreshFields() { fields = blocks.first(where: { $0.id == selected })?.values ?? [:] }
     @discardableResult func applyForm() -> Bool {
         guard formDirty, let block = blocks.first(where: { $0.id == selected }) else { return true }
-        do { var config = Config(text); try config.update(block, values: fields); text = config.text; refreshFields(); return true }
+        do { var config = Config(text); try config.update(block, values: fields); text = config.text; refreshFields(); message = "保存后，下次 SSH 连接生效。"; return true }
         catch { message = error.localizedDescription; return false }
     }
 func select(_ id: Int) {
@@ -111,5 +111,17 @@ func select(_ id: Int) {
 @main struct SSHNoteApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject var editor = Editor()
-    var body: some Scene { Window("SSHNote", id: "main") { ContentView(editor: editor).onAppear { delegate.editor = editor; NSApp.activate(ignoringOtherApps: true) } }.defaultSize(width: 1150, height: 740) }
+    var body: some Scene {
+        Window("SSHNote", id: "main") {
+            ContentView(editor: editor).onAppear {
+                delegate.editor = editor
+                // Preview appearance is process-local; never change the user's system settings.
+                let arguments = ProcessInfo.processInfo.arguments
+                if arguments.contains("--preview"), arguments.contains("--dark") {
+                    NSApp.appearance = NSAppearance(named: .darkAqua)
+                }
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        }.defaultSize(width: 1150, height: 740)
+    }
 }
