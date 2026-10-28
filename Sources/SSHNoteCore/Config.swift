@@ -19,7 +19,7 @@ public struct Config {
             guard let (key, name) = Self.pair(lines[start]), key == "host" else { return nil }
             let end = n + 1 < boundaries.count ? boundaries[n + 1] : lines.count
             var values = ["Host": name]
-            var safe = name.range(of: #"^[A-Za-z0-9_-]+$"#, options: .regularExpression) != nil
+            var safe = name.range(of: #"^[A-Za-z0-9_.-]+$"#, options: .regularExpression) != nil
             for i in (start + 1)..<end {
                 guard let (k, v) = Self.pair(lines[i]) else { continue }
                 if k == "include" { safe = false }
@@ -42,12 +42,17 @@ public struct Config {
     public mutating func update(_ block: Block, values: [String: String]) throws {
         guard block.editable else { throw ConfigError.message("复杂配置请使用原文编辑。") }
         let alias = values["Host", default: ""]
-        guard alias.range(of: #"^[A-Za-z0-9_-]+$"#, options: .regularExpression) != nil else { throw ConfigError.message("别名只能包含英文字母、数字、短横线和下划线。") }
+        guard alias.range(of: #"^[A-Za-z0-9_.-]+$"#, options: .regularExpression) != nil else { throw ConfigError.message("别名只能包含英文字母、数字、点、短横线和下划线。") }
         guard !blocks.contains(where: { $0.id != block.id && $0.name == alias }) else { throw ConfigError.message("别名已存在。") }
         let port = values["Port", default: ""]
         if !port.isEmpty && !(Int(port).map { (1...65535).contains($0) } ?? false) { throw ConfigError.message("端口应为 1–65535。") }
         for value in values.values where value.contains(where: { $0.isNewline }) || value.contains("#") { throw ConfigError.message("表单字段不能包含换行或 #。") }
-        var lines = text.components(separatedBy: "\n")
+for (key, value) in values where value != block.values[key, default: ""] {
+            if value.contains(where: { $0.isWhitespace }) || value.unicodeScalars.contains(where: { $0.value == 34 || $0.value == 92 }) {
+        throw ConfigError.message("表单字段暂不支持空白、引号或反斜线，请使用原文编辑。")
+    }
+}
+var lines = text.components(separatedBy: "\n")
         var slice = Array(lines[block.id..<block.end])
         for field in Self.fields where values[field, default: ""] != block.values[field, default: ""] {
             let value = values[field, default: ""]
