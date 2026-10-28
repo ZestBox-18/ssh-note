@@ -26,3 +26,9 @@
 - 浅色和进程内深色预览已截图检查；未更改用户系统外观设置。README 截图仅包含 example.com 等虚构数据。
 - 新增 macOS 26 CI 构建和 SDK >= 26 检查；云端执行结果待核验。尚无 macOS 26 实机 Liquid Glass、降低透明度、Intel 或 iCloud 跨设备视觉/行为验收。
 - 本轮未写入真实 SSH 配置。配置存储与备份格式未改变，回滚无需数据迁移。
+
+### 云端核验补充
+
+提交 `d304bd7` 的 [GitHub Actions #4](https://github.com/ZestBox-18/ssh-note/actions/runs/40647946038) 已成功完成 macOS 15 与 macOS 26 两组检查。macOS 26 作业实际使用 Xcode 26.6、Swift 6.3.3、macOS SDK 26.5，核心校验、Release 构建、签名验证和产物上传均通过。
+
+该记录证明新版 SDK 构建通过，不代表 macOS 26 图形界面已验收。当前本地安装包由 SDK 15.5 构建；新版 SDK 产物保存在该次 Actions 的 SSHNote-macos-26 附件中。
